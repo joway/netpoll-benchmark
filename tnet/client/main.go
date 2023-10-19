@@ -14,37 +14,24 @@
  * limitations under the License.
  */
 
-package codec
+package main
 
 import (
-	"encoding/binary"
-
-	"github.com/cloudwego/netpoll"
-
 	"github.com/cloudwego/netpoll-benchmark/runner"
+	"github.com/cloudwego/netpoll-benchmark/runner/bench"
 )
 
-func Encode(writer netpoll.Writer, msg *runner.Message) (err error) {
-	header, _ := writer.Malloc(4)
-	binary.BigEndian.PutUint32(header, uint32(len(msg.Message)))
-
-	writer.WriteString(msg.Message)
-	err = writer.Flush()
-	return err
+// main is use for routing.
+func main() {
+	bench.Benching(NewClient)
 }
 
-func Decode(reader netpoll.Reader, msg *runner.Message) (err error) {
-	bLen, err := reader.Next(4)
-	if err != nil {
-		return err
+func NewClient(mode runner.Mode, network, address string) runner.Client {
+	switch mode {
+	case runner.Mode_Echo, runner.Mode_Idle:
+		return NewClientWithConnpool(network, address)
+	case runner.Mode_Mux:
+		return NewClientWithMux(network, address, 4)
 	}
-	l := int(binary.BigEndian.Uint32(bLen))
-
-	// ReadString will copy the underlying data
-	msg.Message, err = reader.ReadString(l)
-	if err != nil {
-		return err
-	}
-	err = reader.Release()
-	return err
+	return nil
 }

@@ -14,37 +14,26 @@
  * limitations under the License.
  */
 
-package codec
+package main
 
 import (
-	"encoding/binary"
-
-	"github.com/cloudwego/netpoll"
-
 	"github.com/cloudwego/netpoll-benchmark/runner"
+	"github.com/cloudwego/netpoll-benchmark/runner/perf"
+	"github.com/cloudwego/netpoll-benchmark/runner/svr"
 )
 
-func Encode(writer netpoll.Writer, msg *runner.Message) (err error) {
-	header, _ := writer.Malloc(4)
-	binary.BigEndian.PutUint32(header, uint32(len(msg.Message)))
-
-	writer.WriteString(msg.Message)
-	err = writer.Flush()
-	return err
+func main() {
+	svr.Serve(NewServer)
 }
 
-func Decode(reader netpoll.Reader, msg *runner.Message) (err error) {
-	bLen, err := reader.Next(4)
-	if err != nil {
-		return err
-	}
-	l := int(binary.BigEndian.Uint32(bLen))
+var reporter = perf.NewRecorder("TNET@Server")
 
-	// ReadString will copy the underlying data
-	msg.Message, err = reader.ReadString(l)
-	if err != nil {
-		return err
+func NewServer(mode runner.Mode) runner.Server {
+	switch mode {
+	case runner.Mode_Echo, runner.Mode_Idle:
+		return NewRPCServer()
+	case runner.Mode_Mux:
+		return NewMuxServer()
 	}
-	err = reader.Release()
-	return err
+	return nil
 }

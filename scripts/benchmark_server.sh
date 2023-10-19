@@ -5,8 +5,8 @@ body=(1024) # 1KB
 concurrent=(100 500 1000)
 
 # no need to change
-repo=("net" "netpoll" "gnet" "evio")
-ports=(7001 7002 7003 7004)
+repo=("net" "netpoll" "gnet" "evio" "tnet")
+ports=(7001 7002 7003 7004 7005)
 
 . ./scripts/env.sh
 . ./scripts/build.sh
@@ -14,7 +14,8 @@ ports=(7001 7002 7003 7004)
 # check args
 args=${1-1}
 if [[ "$args" == "3" ]]; then
-  repo=("net" "netpoll" "gnet")
+  repo=("net" "netpoll" "gnet" "tnet")
+  ports=(7001 7002 7003 7005)
 fi
 
 # 1. echo
